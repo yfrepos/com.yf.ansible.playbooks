@@ -1,2 +1,2 @@
-# Ansible Playbooks Collections by yf
+# Ansible Playbooks Collections
 Collections of Ansible Playbooks
