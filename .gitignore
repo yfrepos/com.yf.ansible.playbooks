@@ -1,1 +1,15 @@
 # Custom gitignore for projects
+
+
+# gitignore for Ansible playbooks project
+*.retry
+*.log
+*.pid
+*.swp
+*.tmp
+*.bak
+*.old
+*.~lock.*
+__pycache__/
+.ansible/
+.venv/
