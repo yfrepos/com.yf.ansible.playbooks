@@ -1,0 +1,5 @@
+---
+- name: Check connectivity
+  hosts: all
+  roles:
+    - ping

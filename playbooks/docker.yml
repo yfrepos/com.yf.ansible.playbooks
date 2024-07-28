@@ -1,0 +1,12 @@
+---
+- name: Deploy Docker
+  hosts: all
+  become: true
+  roles:
+    - role: docker
+  handlers:
+    - name: restart docker
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+      listen: restart docker

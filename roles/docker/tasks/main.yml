@@ -1,0 +1,9 @@
+---
+- name: Include pre-install tasks
+  include_tasks: pre_install.yml
+
+- name: Include install tasks
+  include_tasks: install.yml
+
+- name: Include post-install tasks
+  include_tasks: post_install.yml

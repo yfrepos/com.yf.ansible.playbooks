@@ -1,0 +1,31 @@
+---
+- name: Install Docker on RedHat based systems
+  ansible.builtin.yum:
+    name:
+      - docker-ce-{{ docker_version }}
+      - docker-ce-cli-{{ docker_version }}
+      - containerd.io
+    state: present
+  when: ansible_os_family == "RedHat"
+  register: yum_docker_install
+  failed_when: yum_docker_install.failed
+  ignore_errors: yes
+
+- name: Install Docker on Debian based systems
+  ansible.builtin.apt:
+    name:
+      - docker-ce={{ docker_version }}
+      - docker-ce-cli={{ docker_version }}
+      - containerd.io
+    state: present
+  when: ansible_os_family == "Debian"
+  register: apt_docker_install
+  failed_when: apt_docker_install.failed
+  ignore_errors: yes
+
+- name: Fail if Docker installation failed
+  ansible.builtin.fail:
+    msg: "Docker installation failed. Check logs for details."
+  when:
+    - yum_docker_install is failed
+    - apt_docker_install is failed

@@ -1,0 +1,67 @@
+---
+- name: Install required packages for RedHat based systems
+  ansible.builtin.yum:
+    name:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+    state: present
+  when: ansible_os_family == "RedHat"
+  register: yum_install
+  failed_when: yum_install.failed
+  ignore_errors: yes
+
+- name: Install required packages for Debian based systems
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  when: ansible_os_family == "Debian"
+  register: apt_install
+  failed_when: apt_install.failed
+  ignore_errors: yes
+
+- name: Add Docker GPG key for Debian based systems
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+  when: ansible_os_family == "Debian"
+  register: add_gpg_key
+  failed_when: add_gpg_key.failed
+  ignore_errors: yes
+
+- name: Add Docker repository for Debian based systems
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} $(lsb_release -cs) stable"
+    state: present
+  when: ansible_os_family == "Debian"
+  register: add_apt_repo
+  failed_when: add_apt_repo.failed
+  ignore_errors: yes
+
+- name: Add Docker repository for RedHat based systems
+  ansible.builtin.yum_repository:
+    name: docker-ce
+    description: Docker CE Repository
+    baseurl: https://download.docker.com/linux/centos/docker-ce.repo
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://download.docker.com/linux/centos/gpg
+  when: ansible_os_family == "RedHat"
+  register: add_yum_repo
+  failed_when: add_yum_repo.failed
+  ignore_errors: yes
+
+- name: Fail if pre-install tasks failed
+  ansible.builtin.fail:
+    msg: "Pre-install tasks failed. Check logs for details."
+  when:
+    - yum_install is failed
+    - apt_install is failed
+    - add_gpg_key is failed
+    - add_apt_repo is failed
+    - add_yum_repo is failed

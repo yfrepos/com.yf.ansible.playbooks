@@ -1,0 +1,127 @@
+---
+- name: Check if local RPM package is provided
+  stat:
+    path: "{{ role_path }}/files/{{ nessus_local_package }}"
+  when: ansible_os_family == "RedHat"
+  register: local_nessus_rpm
+
+- name: Check if local DEB package is provided
+  stat:
+    path: "{{ role_path }}/files/{{ nessus_local_package }}"
+  when: ansible_os_family == "Debian"
+  register: local_nessus_deb
+
+- name: Install common dependencies
+  ansible.builtin.package:
+    name: wget
+    state: present
+  register: deps_install
+  failed_when: deps_install.failed
+  ignore_errors: yes
+
+- name: Copy local RPM package to /tmp if available
+  copy:
+    src: "{{ role_path }}/files/{{ nessus_local_package }}"
+    dest: /tmp/nessus.rpm
+  when:
+    - ansible_os_family == "RedHat"
+    - local_nessus_rpm.stat.exists
+  register: copy_nessus_rpm
+
+- name: Copy local DEB package to /tmp if available
+  copy:
+    src: "{{ role_path }}/files/{{ nessus_local_package }}"
+    dest: /tmp/nessus.deb
+  when:
+    - ansible_os_family == "Debian"
+    - local_nessus_deb.stat.exists
+  register: copy_nessus_deb
+
+- name: Download Nessus package on RedHat based systems if not available locally
+  ansible.builtin.get_url:
+    url: "{{ nessus_rpm_url }}"
+    dest: /tmp/nessus.rpm
+  when:
+    - ansible_os_family == "RedHat"
+    - not local_nessus_rpm.stat.exists
+  register: download_nessus_rpm
+  failed_when: download_nessus_rpm.failed
+  ignore_errors: yes
+
+- name: Download Nessus package on Debian based systems if not available locally
+  ansible.builtin.get_url:
+    url: "{{ nessus_deb_url }}"
+    dest: /tmp/nessus.deb
+  when:
+    - ansible_os_family == "Debian"
+    - not local_nessus_deb.stat.exists
+  register: download_nessus_deb
+  failed_when: download_nessus_deb.failed
+  ignore_errors: yes
+
+- name: Fail if download and local RPM package are not available
+  ansible.builtin.fail:
+    msg: "Failed to download Nessus package for RedHat and no local package provided. Please download the RPM package and place it in the 'roles/nessus/files' directory."
+  when:
+    - ansible_os_family == "RedHat"
+    - not local_nessus_rpm.stat.exists
+    - download_nessus_rpm is failed
+
+- name: Fail if download and local DEB package are not available
+  ansible.builtin.fail:
+    msg: "Failed to download Nessus package for Debian and no local package provided. Please download the DEB package and place it in the 'roles/nessus/files' directory."
+  when:
+    - ansible_os_family == "Debian"
+    - not local_nessus_deb.stat.exists
+    - download_nessus_deb is failed
+
+- name: Install Nessus on RedHat based systems
+  ansible.builtin.yum:
+    name: /tmp/nessus.rpm
+    state: present
+  when: ansible_os_family == "RedHat"
+  register: install_nessus_rpm
+  failed_when: install_nessus_rpm.failed
+  ignore_errors: yes
+
+- name: Install Nessus on Debian based systems
+  ansible.builtin.dpkg:
+    name: /tmp/nessus.deb
+    state: present
+  when: ansible_os_family == "Debian"
+  register: install_nessus_deb
+  failed_when: install_nessus_deb.failed
+  ignore_errors: yes
+
+- name: Enable and start Nessus service
+  ansible.builtin.systemd:
+    name: nessusd
+    enabled: yes
+    state: started
+  register: nessus_service
+  failed_when: nessus_service.failed
+  ignore_errors: yes
+
+- name: Fail if dependencies installation failed
+  ansible.builtin.fail:
+    msg: "Dependencies installation failed. Check logs for details."
+  when: deps_install is failed
+
+- name: Fail if Nessus installation failed on RedHat based systems
+  ansible.builtin.fail:
+    msg: "Nessus installation failed on RedHat based systems. Check logs for details."
+  when:
+    - ansible_os_family == 'RedHat'
+    - install_nessus_rpm is failed
+
+- name: Fail if Nessus installation failed on Debian based systems
+  ansible.builtin.fail:
+    msg: "Nessus installation failed on Debian based systems. Check logs for details."
+  when:
+    - ansible_os_family == 'Debian'
+    - install_nessus_deb is failed
+
+- name: Fail if Nessus service failed to start
+  ansible.builtin.fail:
+    msg: "Nessus service failed to start. Check logs for details."
+  when: nessus_service is failed

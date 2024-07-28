@@ -1,9 +1,14 @@
 ---
-- name: Update packages on all servers
-  hosts: all
-  become: yes
-  tasks:
-    - name: Update package cache and upgrade packages
-      ansible.builtin.package:
-        name: '*'
-        state: latest
+- name: Update package cache and upgrade packages
+  ansible.builtin.package:
+    name: '*'
+    state: latest
+  register: package_update
+  failed_when: package_update.failed
+  ignore_errors: yes
+  notify: restart necessary services
+
+- name: Fail if package upgrade failed
+  ansible.builtin.fail:
+    msg: "Package upgrade failed. Check logs for details."
+  when: package_update is failed

@@ -1,6 +1,15 @@
 ---
-- name: Check connectivity
-  hosts: all
-  tasks:
-    - name: Ping all nodes
-      ansible.builtin.ping:
+- name: Ping all nodes
+  ansible.builtin.ping:
+  register: ping_result
+  ignore_errors: yes
+
+- name: Fail if any node is unreachable
+  ansible.builtin.fail:
+    msg: "Some nodes are unreachable. Check the connectivity logs for details."
+  when: ping_result is failed
+
+- name: Debug ping results
+  ansible.builtin.debug:
+    msg: "{{ ping_result }}"
+  when: ping_result is failed

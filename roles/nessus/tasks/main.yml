@@ -1,4 +1,13 @@
 ---
-- name: Installing Nessus
-  hosts: all
-  tasks:
+- name: Set Nessus package file paths for RedHat based systems
+  set_fact:
+    nessus_local_package: "{{ local_nessus_rpm_path }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Set Nessus package file paths for Debian based systems
+  set_fact:
+    nessus_local_package: "{{ local_nessus_deb_path }}"
+  when: ansible_os_family == "Debian"
+
+- name: Include install tasks
+  include_tasks: install.yml

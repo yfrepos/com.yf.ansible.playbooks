@@ -1,0 +1,6 @@
+---
+- name: Install Nessus on Linux servers
+  hosts: all
+  become: true
+  roles:
+    - nessus

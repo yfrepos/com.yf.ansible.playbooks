@@ -1,0 +1,6 @@
+---
+nessus_version: "10.7.5"
+nessus_rpm_url: "https://www.tenable.com/downloads/api/v2/pages/nessus/files/Nessus-{{ nessus_version }}-el{{ ansible_distribution_major_version }}.x86_64.rpm"
+nessus_deb_url: "https://www.tenable.com/downloads/api/v2/pages/nessus/files/Nessus-{{ nessus_version }}-debian{{ ansible_distribution_major_version }}_amd64.deb"
+local_nessus_rpm_path: "Nessus-{{ nessus_version }}-el{{ ansible_distribution_major_version }}.x86_64.rpm"
+local_nessus_deb_path: "Nessus-{{ nessus_version }}-debian{{ ansible_distribution_major_version }}_amd64.deb"

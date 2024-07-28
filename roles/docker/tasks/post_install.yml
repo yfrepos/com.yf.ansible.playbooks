@@ -1,0 +1,58 @@
+---
+- name: Create /etc/docker directory
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+  register: create_docker_dir
+  failed_when: create_docker_dir.failed
+  ignore_errors: yes
+
+- name: Create Docker daemon configuration file
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0644'
+  register: create_daemon_config
+  failed_when: create_daemon_config.failed
+  ignore_errors: yes
+
+- name: Validate Docker daemon configuration
+  ansible.builtin.command: "dockerd --config-file=/etc/docker/daemon.json --validate"
+  register: validate_result
+  failed_when:
+    - validate_result.rc != 0
+    - "'unknown flag' in validate_result.stderr"
+  ignore_errors: yes
+
+- name: Debug Docker daemon configuration validation
+  ansible.builtin.debug:
+    msg: "{{ validate_result }}"
+
+- name: Restart Docker service if configuration is valid
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when: validate_result.rc == 0
+  notify: restart docker
+
+- name: Fail if Docker daemon configuration is invalid
+  ansible.builtin.fail:
+    msg: "Docker daemon configuration is invalid. Please check the configuration."
+  when: validate_result.rc != 0
+
+- name: Add users to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  with_items: "{{ docker_users }}"
+  register: add_docker_users
+  failed_when: add_docker_users.failed
+  ignore_errors: yes
+
+- name: Fail if adding users to Docker group failed
+  ansible.builtin.fail:
+    msg: "Adding users to Docker group failed. Check logs for details."
+  when: add_docker_users is failed
