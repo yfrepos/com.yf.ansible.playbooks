@@ -1,9 +1,19 @@
 ---
-- name: restart necessary services
+- name: Restart necessary services on Debian/Ubuntu
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: restarted
-  with_items:
+  loop:
+    - ssh
+  when: ansible_facts['os_family'] == 'Debian'
+  ignore_errors: yes
+
+- name: Restart necessary services on RedHat/CentOS
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop:
     - network
     - sshd
+  when: ansible_facts['os_family'] == 'RedHat'
   ignore_errors: yes

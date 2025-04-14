@@ -3,6 +3,7 @@
   ansible.builtin.package:
     name: '*'
     state: latest
+    update_cache: true
   register: package_update
   failed_when: package_update.failed
   ignore_errors: yes
