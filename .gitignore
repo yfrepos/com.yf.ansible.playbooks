@@ -1,5 +1,5 @@
 # Custom gitignore for projects
-inventory
+inventory.yml
 !*example
 
 # Byte-compiled / optimized / DLL files
