@@ -13,10 +13,3 @@
   ansible.builtin.fail:
     msg: "⛔ Upgrade failed on {{ inventory_hostname }}. See logs for details."
   when: package_update is failed
-
-- name: Log upgrade summary
-  ansible.builtin.debug:
-    msg:
-      - "Changed: {{ package_update.changed }}"
-      - "Failures: {{ package_update.failed }}"
-      - "Details: {{ package_update.results|default(package_update) }}"
