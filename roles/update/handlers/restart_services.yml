@@ -6,7 +6,7 @@
   loop:
     - ssh
   when: ansible_facts['os_family'] == 'Debian'
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Restart necessary services on RedHat/CentOS
   ansible.builtin.systemd:
@@ -16,4 +16,4 @@
     - network
     - sshd
   when: ansible_facts['os_family'] == 'RedHat'
-  ignore_errors: yes
+  ignore_errors: true

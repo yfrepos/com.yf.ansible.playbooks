@@ -11,5 +11,5 @@
 
 - name: Fail if package upgrade failed
   ansible.builtin.fail:
-    msg: "⛔ Upgrade failed on {{ inventory_hostname }}. See logs for details."
+    msg: "Upgrade failed on {{ inventory_hostname }}. See logs for details."
   when: package_update is failed
